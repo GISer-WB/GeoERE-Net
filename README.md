@@ -7,16 +7,15 @@ This is the code of the paper "Understanding geological reports based on knowled
 {
       "text": "The volcanic rocks are mainly exposed in the Tuojiqubuqu area.",
       "triple_list": [
-          [
+       [
              "The volcanic rocks",
              "Exposed in",
              "The Tuojiqubuqu area"
-          ]    
-       ]
-}
-
+      ] 
+            ]
+ }
 2) Training
-python train.py
+      python train.py
 
 3) Validation
-python test.py
+      python test.py
