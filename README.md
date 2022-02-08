@@ -14,7 +14,7 @@ This paper proposes a  method for understanding  geological report content using
 - einops
 - tqdm
 
-## Dateset
+## Dataset
 
 *The format of the dataset is Chinese text, and the following content is the translation content. The format of each statement is as follows, which are stored in the . json file. The dataset is divided into training set, validation set and test set.*
 
