@@ -18,12 +18,14 @@ import statistics
 from axial_attention import AxialAttention
 from torch import optim
 
+# Setting the Number of Gpus  
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 BERT_PATH = "./chinese_roberta_wwm_ext_pytorch"
 maxlen = 256 ####256 
 
+# load data
 def load_data(filename):
     D = []
     
@@ -70,13 +72,14 @@ for data in tqdm(train_data):
         train_data_new.append(data)
 print(len(train_data_new))
 
-
+# Relationship digitization
 with open('./data/CMED/rel2id.json', encoding='utf-8') as f:
     l = json.load(f)
     id2predicate = l[0] 
     predicate2id = l[1]  
 print(len(predicate2id))  
 
+# Chinese words segmentation
 class OurTokenizer(BertTokenizer):
     def tokenize(self, text):
         R = []
@@ -100,7 +103,7 @@ class OurTokenizer(BertTokenizer):
 # Initialize the Tokenizer
 tokenizer = OurTokenizer(vocab_file="./chinese_roberta_wwm_ext_pytorch/vocab.txt")   
 
-
+# Load training dataset
 class TorchDataset(Dataset):
     def __init__(self, data):
         self.data = data
@@ -291,7 +294,8 @@ def init_hidden(batch_size):  # initialize hidden states
 def zeros(*args):
     x = torch.zeros(*args)
     return x.cuda() 
-    
+
+# GeoERE-Net 
 class REModel(nn.Module):
     def __init__(self):
         super(REModel, self).__init__()
@@ -410,6 +414,7 @@ def get_long_tensor(tokens_list, batch_size):
         tokens[i, :len(s)] = torch.LongTensor(s)
     return tokens
 
+# Load validation dataset
 class ValidDataset(Dataset):
     def __init__(self, data):
         self.data = data
@@ -449,7 +454,8 @@ class ValidDataset(Dataset):
 valid_dataset = ValidDataset(valid_data)
 
 valid_loader = DataLoader(dataset=valid_dataset, batch_size=args.batch2, shuffle=False, drop_last = True)
-    
+
+# Triplet extraction for Validation set 
 def extract_spoes(data, model, device):
 
     token_ids = data[0]
@@ -501,7 +507,8 @@ def extract_spoes(data, model, device):
         return [(data[2][s[0]:s[1]+1], id2predicate[str(p)], data[2][o[0]:o[1]+1]) for s, p, o in spoes]
     else:
         return []
-       
+ 
+ #  Evaluation index    
 def evaluate(valid_data, valid_load, model, device):
     """
     Evaluation function, calculate F1, precision, recall
@@ -555,7 +562,7 @@ def evaluate(valid_data, valid_load, model, device):
     #return f1, precision, recall
     return statistics.mean(F1), statistics.mean(P), statistics.mean(Re)
 
-
+# Training and validation stage
 def train(model, train_loader, epoches, device):
     #model.train()
     for _ in range(epoches):
