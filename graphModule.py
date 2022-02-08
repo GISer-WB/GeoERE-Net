@@ -3,6 +3,7 @@ from graphLayer import GCU
 import torch
 from config import args
 
+# Multiscale Settings for Graph Convolutional Units
 class GraphConv2(nn.Module):
     def __init__(self, batch = 1, h=[16,32,64,128,256], w=[16,32,64,128,256], d=[768,512], V=[2,4,8,32],outfeatures=[64,32]):
         super(GraphConv2, self).__init__()
