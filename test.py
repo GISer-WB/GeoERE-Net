@@ -16,6 +16,8 @@ from graphModule import *
 #from pyhanlp import *
 
 maxlen = 256
+
+#Load test data
 def load_data(filename):
     D = []
     
@@ -31,7 +33,8 @@ def load_data(filename):
     return D 
 
 valid_data =  load_data("./data/CMED/test_triples.json")
-    
+ 
+ # Chinese word segmentation
 class OurTokenizer(BertTokenizer):
     def tokenize(self, text):
         R = []
@@ -52,7 +55,7 @@ class OurTokenizer(BertTokenizer):
             return True
         return False
 
-
+# BiLSTM
 class WordCharLSTM(nn.Module):
     def __init__(
             self,
@@ -156,7 +159,8 @@ def init_hidden(batch_size):  # initialize hidden states
 def zeros(*args):
     x = torch.zeros(*args)
     return x.cuda() 
-    
+  
+ # GeoERE-Net
 class REModel(nn.Module):
     def __init__(self):
         super(REModel, self).__init__()
@@ -261,7 +265,8 @@ class REModel(nn.Module):
         
         obj_preds = output.view(-1, output.shape[1], len(predicate2id), 2)
         return sub_preds, obj_preds
-        
+ 
+# Triplet extraction
 def extract_spoes(data, model, device):
  
     token_ids = data[0]
@@ -312,6 +317,7 @@ def extract_spoes(data, model, device):
     else:
         return []
 
+  # Load dataset
 class ValidDataset(Dataset):
     def __init__(self, data):
         self.data = data
@@ -336,6 +342,7 @@ class ValidDataset(Dataset):
 valid_dataset = ValidDataset(valid_data)
 valid_loader = DataLoader(dataset=valid_dataset, batch_size=args.batch2, shuffle=False, drop_last = True)
 
+#Inference
 def predict_to_file(valid_data, out_file,valid_loader,DEVICE):
 
     F1 = []
