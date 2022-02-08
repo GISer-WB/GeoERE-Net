@@ -18,6 +18,7 @@ This paper proposes a  method for understanding  geological report content using
 
 *The format of the dataset is Chinese text, and the following content is the translation content. The format of each statement is as follows, which are stored in the . json file. The dataset is divided into training set, validation set and test set.*
 
+```
 {
       "text": "The volcanic rocks are mainly exposed in the Tuojiqubuqu area.",
       "triple_list": [
@@ -28,6 +29,7 @@ This paper proposes a  method for understanding  geological report content using
       ] 
    ]
  }
+```
 
 ## Usage
 
