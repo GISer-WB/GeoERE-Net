@@ -7,6 +7,8 @@ from sklearn.cluster import KMeans
 from torch.nn.modules.module import Module
 
 
+#Setup and implementation of graph convolution unit
+
 class GCU(Module):
 	def __init__(self, batch = 16, h=64, w=64, d=256, V=32,outfeatures=256):
 		super(GCU, self).__init__()
