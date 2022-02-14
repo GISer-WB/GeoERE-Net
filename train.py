@@ -191,97 +191,6 @@ class BertLayerNorm(nn.Module):
         x = (x - u) / torch.sqrt(s + self.variance_epsilon)
         return self.weight * x + self.bias
 
-class WordCharLSTM(nn.Module):
-    def __init__(
-            self,
-            num_word_embeddings,
-            num_tags,
-            word_embeddings,
-            num_char_embeddings,
-            word_lstm,
-            char_lstm,
-            char_padding_idx=0,
-            train_word_embeddings=False):
-        super(WordCharLSTM, self).__init__()
-
-        self.char_embeddings = nn.Embedding(
-            num_embeddings=num_char_embeddings,
-            embedding_dim=CHAR_EMBEDDING_DIM,
-            padding_idx=char_padding_idx)
-
-        self.word_embeddings = nn.Embedding(
-            num_embeddings=num_word_embeddings,
-            embedding_dim=WORD_EMBEDDING_DIM,
-            padding_idx=PAD_IDX,
-            _weight=word_embeddings)
-
-        if word_embeddings:
-            self.word_embeddings.weight.requires_grad = train_word_embeddings
-
-        self.char_lstm = char_lstm
-        self.embedding_dropout = nn.Dropout(0.3)
-        self.word_lstm = word_lstm
-        self.output_dropout = nn.Dropout(0.3)
-        self.out = nn.Linear(WORD_LSTM_HIDDEN_SIZE, num_tags)
-
-        nn.init.xavier_uniform_(self.out.weight)
-        for name, param in self.word_lstm.named_parameters():
-            if 'weight' in name:
-                nn.init.xavier_uniform_(param)
-
-        for name, param in self.char_lstm.named_parameters():
-            if 'weight' in name:
-                nn.init.xavier_uniform_(param)
-
-    def init_hidden(self, batch_size):  # initialize hidden states
-        h = zeros(WORD_LSTM_NUM_LAYERS * WORD_LSTM_NUM_DIRS,
-                  batch_size,
-                  WORD_LSTM_HIDDEN_SIZE // WORD_LSTM_NUM_DIRS)  # hidden states
-        c = zeros(WORD_LSTM_NUM_LAYERS * WORD_LSTM_NUM_DIRS,
-                  batch_size,
-                  WORD_LSTM_HIDDEN_SIZE // WORD_LSTM_NUM_DIRS)  # cell states
-        return (h, c)
-
-    def forward(self, word_x, mask, char_x):
-        char_output = self._char_forward(char_x)
-        batch_size = word_x.size(0)
-        max_seq_len = word_x.size(1)
-        char_output = char_output.reshape(batch_size, max_seq_len, -1)  # last dimension is for char lstm hidden size
-
-        word_x = self.word_embeddings(word_x)
-        word_x = torch.cat([word_x, char_output], -1)
-        word_x = self.embedding_dropout(word_x)
-
-        initial_hidden = self.init_hidden(batch_size)  # batch size is first
-        word_x = nn.utils.rnn.pack_padded_sequence(word_x, mask.sum(1).int(), batch_first=True)
-        output, hidden = self.word_lstm(word_x, initial_hidden)
-
-        output, recovered_lengths = nn.utils.rnn.pad_packed_sequence(output, batch_first=True)
-        output = self.output_dropout(output)
-        output = self.out(output)  # batch x seq_len x num_tags
-        output *= mask.unsqueeze(-1)  # mask - batch x seq_len -> batch x seq_len x 1
-        return output
-
-    def _char_forward(self, x):
-        word_lengths = x.gt(0).sum(1)  # actual word lengths
-        sorted_padded, order = _sort(x, word_lengths)
-        embedded = self.char_embeddings(sorted_padded)
-
-        word_lengths_copy = word_lengths.clone()
-        word_lengths_copy[word_lengths == 0] = 1
-        packed = torch.nn.utils.rnn.pack_padded_sequence(embedded, word_lengths_copy[order], True)
-        packed_output, _ = self.char_lstm(packed)
-        output, _ = torch.nn.utils.rnn.pad_packed_sequence(packed_output, True)
-
-        _, reverse_sort_order = torch.sort(order, dim=0)
-        output = output[reverse_sort_order]
-
-        indices_of_lasts = (word_lengths_copy - 1).unsqueeze(1).expand(-1, output.shape[2]).unsqueeze(1)
-        output = output.gather(1, indices_of_lasts).squeeze()
-        output[word_lengths == 0] = 0
-        return output
-
-
 def init_hidden(batch_size):  # initialize hidden states
         h = zeros(1 * 2,
                   batch_size,
@@ -428,7 +337,8 @@ class ValidDataset(Dataset):
         x = tokenizer.tokenize(t['text'])
         x = ["[CLS]"] + x + ["[SEP]"]
         token_ids = tokenizer.convert_tokens_to_ids(x)
-        
+        seg_ids = [0] * len(token_ids) 
+        assert len(token_ids) == len(t['text'])+2
 
         token_ids = torch.LongTensor(self.sequence_padding(token_ids, maxlen=maxlen))
         seg_ids = torch.LongTensor(self.sequence_padding(seg_ids, maxlen=maxlen))
