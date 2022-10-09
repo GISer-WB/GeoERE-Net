@@ -4,7 +4,7 @@
 
 ## Description
 
-This paper proposes a  method for understanding  geological report content using deep learning . GeoERE-Net is a triplet extraction network proposed for text knowledge mining in the geological field. We are currently submitting the paper to the journal 《Computers & Geosciences》. If you refer to this repository, please cite it.
+This paper proposes a  method for understanding  geological report content using deep learning . GeoERE-Net is a triplet extraction network proposed for text knowledge mining in the geological field. This paper has been accepted by 《Computers & Geosciences》. If you refer to this repository, please cite it. The link of the paper: [GeoERE-Net](https://www.sciencedirect.com/science/article/pii/S0098300422001789)
 
 ## Requirements
 
