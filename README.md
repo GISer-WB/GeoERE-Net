@@ -45,3 +45,6 @@ This paper proposes a  method for understanding  geological report content using
        python test.py
    ```
 
+## Citation
+
+Wang B, Wu L, Xie Z, et al. Understanding geological reports based on knowledge graphs using a deep learning approach[J]. Computers & Geosciences, 2022: 105229.
